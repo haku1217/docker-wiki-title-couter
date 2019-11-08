@@ -1,0 +1,16 @@
+FROM golang:alpine as builder
+
+
+WORKDIR /app
+COPY /app2/ /app
+RUN apk --no-cache add wget gzip bash && \
+    wget -q -O - https://dumps.wikimedia.org/jawiki/latest/jawiki-latest-all-titles.gz | gzip -d -c | awk '{print $2}' | gzip -c > jawiki-latest-all-titles.gz
+RUN go build main.go && rm -rf main.go
+
+# CMD ["./main"]
+
+FROM scratch
+COPY --from=builder /app/main /
+COPY --from=builder /app/jawiki-latest-all-titles.gz /
+
+ENTRYPOINT [ "/main" ]
